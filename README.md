@@ -1,5 +1,5 @@
 # File Storage and Sharing Platform
-![Project Diagram](docs/images/filtrekker.svg)
+![Project Logo](docs/images/filtrekker.png)
 
 ## Overview
 
