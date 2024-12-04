@@ -1,5 +1,5 @@
 # File Storage and Sharing Platform
-![Project Logo](docs/images/filtrekker.png)
+![Project Logo](docs/images/filetrekker_200x202.png)
 
 ## Overview
 
@@ -35,8 +35,8 @@ and optional mail quota management via **WildDuck**.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/file-sharing-platform.git
-   cd file-sharing-platform
+   git clone https://github.com/TenforwardAB/fileTrekker.git
+   cd fileTrekker
    ```
 
 2. Install dependencies:
