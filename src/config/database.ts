@@ -26,12 +26,10 @@ let db: Db;
 export async function initializeDatabase(): Promise<Db> {
   if (!client || !db) {
     client = new MongoClient(uri, {
-      auth: process.env.MONGO_INITDB_ROOT_USERNAME
-        ? {
-            username: process.env.MONGO_INITDB_ROOT_USERNAME,
-            password: process.env.MONGO_INITDB_ROOT_PASSWORD,
-          }
-        : undefined,
+      auth: {
+            username: process.env.APP_DB_USER,
+            password: process.env.APP_DB_PASSWORD,
+          },
     });
     await client.connect();
     db = client.db(dbName);

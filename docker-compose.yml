@@ -6,11 +6,14 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: janeway
-      MONGO_INITDB_ROOT_PASSWORD: Jhsd6k9wWo4LlDsuk7nbSYT43jjsoPe4
-      MONGO_INITDB_DATABASE: subspace
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INIT_DATABASE}
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
     volumes:
       - mongodb-data:/data/db
+      - ./mongo-init-scripts:/docker-entrypoint-initdb.d:ro
     restart: always
 
 volumes:
