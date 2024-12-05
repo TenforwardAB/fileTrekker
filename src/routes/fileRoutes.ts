@@ -16,38 +16,25 @@
  * This file :: fileRoutes.ts is part of the fileTrekker project.
  */
 
-import { Router } from 'express';
+import express from 'express';
+import multer from 'multer';
+import { FileController } from '../controllers/fileController';
 
-const router = Router();
-
-// GET: Fetch all files
-router.get('/', (req, res) => {
-  res.json({ message: 'Fetch all files' });
+const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 150 * 1024 * 1024 },
 });
+// Upload a file
+router.post('/', upload.single('file'), FileController.uploadFile);
 
-// POST: Create a new file
-router.post('/', (req, res) => {
-  const { name, path, size, owner } = req.body;
-  res.json({ message: 'File created', file: { name, path, size, owner } });
-});
+// List files for a user
+router.get('/:ownerId', FileController.listFiles);
 
-// GET: Fetch a single file by ID
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  res.json({ message: `Fetch file with ID: ${id}` });
-});
+// Update file metadata
+router.put('/:fileId', FileController.updateFile);
 
-// PUT: Update a file by ID
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-  res.json({ message: `File with ID: ${id} updated`, updates });
-});
-
-// DELETE: Delete a file by ID
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  res.json({ message: `File with ID: ${id} deleted` });
-});
+// Delete file
+router.delete('/:fileId', FileController.deleteFile);
 
 export default router;

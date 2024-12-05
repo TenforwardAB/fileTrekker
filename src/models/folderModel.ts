@@ -16,37 +16,98 @@
  * This file :: folderModel.ts is part of the fileTrekker project.
  */
 
-import mongoose, { Schema, Model, Document, Types } from 'mongoose';
+import {Db, ObjectId} from 'mongodb';
 
-// Define the interface for the plain folder data
 export interface IFolder {
-  name: string;
-  parent: Types.ObjectId | null;
-  owner: Types.ObjectId;
-  sharedWith: Types.ObjectId[];
-  group: Types.ObjectId | null;
+    _id?: ObjectId; // MongoDB ID
+    name: string;
+    parent?: ObjectId | null;
+    owner: ObjectId;
+    sharedWith?: ObjectId[];
+    group?: ObjectId | null;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
-// Define the interface for the folder document (Mongoose document)
-export interface IFolderDocument extends IFolder, Document {}
+export class FolderModel {
+    private collection;
 
-// Define the model interface (static methods)
-export interface IFolderModel extends Model<IFolderDocument> {}
+    constructor(private db: Db) {
+        this.collection = db.collection('folders');
+    }
 
-// Define the schema
-const folderSchema = new Schema<IFolderDocument, IFolderModel>({
-  name: { type: String, required: true },
-  parent: { type: Schema.Types.ObjectId, ref: 'Folder', default: null },
-  owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  sharedWith: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  group: { type: Schema.Types.ObjectId, ref: 'Group', default: null },
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
-});
+    async createFolder(folder: {
+        name: string;
+        parent: ObjectId | null;
+        owner: ObjectId;
+        sharedWith?: ObjectId[];
+        group?: ObjectId | null;
+    }): Promise<ObjectId> {
+        const result = await this.collection.insertOne({
+            ...folder,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+        return result.insertedId;
+    }
 
-// Create the model explicitly with all required types
-const FolderModel = mongoose.model<IFolderDocument, IFolderModel>('Folder', folderSchema);
+    async listFolders(ownerId: ObjectId): Promise<any[]> {
+        return this.collection.find({owner: ownerId}).toArray();
+    }
 
-export default FolderModel;
+    async updateFolder(folderId: ObjectId, updates: Partial<IFolder>): Promise<boolean> {
+        const result = await this.collection.updateOne(
+            {_id: folderId},
+            {$set: {...updates, updatedAt: new Date()}}
+        );
+        return result.matchedCount > 0;
+    }
+
+    async deleteFolder(folderId: ObjectId, recursive: boolean = false): Promise<number> {
+        const folderCollection = this.collection;
+
+        if (!recursive) {
+            const subfolders = await folderCollection.find({parent: folderId}).toArray();
+            if (subfolders.length > 0) {
+                throw new Error(
+                    `Folder with ID ${folderId} cannot be deleted because it contains subfolders. Use the recursive option to delete all subfolders.`
+                );
+            }
+
+            const result = await folderCollection.deleteOne({_id: folderId});
+
+            if (result.deletedCount === 0) {
+                throw new Error(`Folder with ID ${folderId} was not found.`);
+            }
+
+            console.log(`Folder with ID ${folderId} deleted successfully.`);
+            return result.deletedCount;
+        } else {
+            const allFolders = await folderCollection.aggregate([
+                {$match: {_id: folderId}},
+                {
+                    $graphLookup: {
+                        from: "folders",
+                        startWith: "$_id",
+                        connectFromField: "_id",
+                        connectToField: "parent",
+                        as: "descendants",
+                    },
+                },
+            ]).toArray();
+
+            if (!allFolders.length) {
+                throw new Error(`Folder with ID ${folderId} was not found.`);
+            }
+
+            const idsToDelete = allFolders[0].descendants.map((folder: { _id: ObjectId }) => folder._id);
+            idsToDelete.push(folderId);
+
+            const result = await folderCollection.deleteMany({_id: {$in: idsToDelete}});
+            console.log(`Folder with ID ${folderId} and its ${result.deletedCount - 1} subfolders deleted successfully.`);
+            return result.deletedCount;
+        }
+    }
+
+
+}

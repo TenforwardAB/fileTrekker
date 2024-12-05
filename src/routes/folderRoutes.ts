@@ -16,38 +16,21 @@
  * This file :: folderRoutes.ts is part of the fileTrekker project.
  */
 
-import { Router } from 'express';
+import express from 'express';
+import { FolderController } from '../controllers/folderController';
 
-const router = Router();
+const router = express.Router();
 
-// GET: Fetch all folders
-router.get('/', (req, res) => {
-  res.json({ message: 'Fetch all folders' });
-});
+// Create folder
+router.post('/', FolderController.createFolder);
 
-// POST: Create a new folder
-router.post('/', (req, res) => {
-  const { name, parent, owner } = req.body;
-  res.json({ message: 'Folder created', folder: { name, parent, owner } });
-});
+// List folders for a user
+router.get('/:ownerId', FolderController.listFolders);
 
-// GET: Fetch a single folder by ID
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  res.json({ message: `Fetch folder with ID: ${id}` });
-});
+// Update folder
+router.put('/:folderId', FolderController.updateFolder);
 
-// PUT: Update a folder by ID
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-  res.json({ message: `Folder with ID: ${id} updated`, updates });
-});
-
-// DELETE: Delete a folder by ID
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  res.json({ message: `Folder with ID: ${id} deleted` });
-});
+// Delete folder
+router.delete('/:folderId', FolderController.deleteFolder);
 
 export default router;

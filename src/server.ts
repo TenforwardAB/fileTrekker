@@ -16,10 +16,37 @@
  * This file :: server.ts is part of the fileTrekker project.
  */
 
-import app from './app';
+import express from 'express';
+import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import { initializeDatabase } from './config/database'; // Import database initialization
+import fileRoutes from './routes/fileRoutes';
+import folderRoutes from './routes/folderRoutes';
+
+dotenv.config();
+
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+initializeDatabase()
+  .then(() => {
+    console.log('Database initialized successfully');
+
+    // Routes
+    app.use('/api/files', fileRoutes);
+    app.use('/api/folders', folderRoutes);
+
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database:', err.message);
+    process.exit(1); // Exit the process if database initialization fails
+  });

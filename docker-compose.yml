@@ -1,17 +1,18 @@
 version: '3.8'
 services:
-  app:
-    build: .
-    ports:
-      - "4000:4000"
-    environment:
-      - PORT=4000
-      - MONGO_URI=mongodb://mongo:27017/filesharing
-    depends_on:
-      - mongo
-
   mongo:
-    image: mongo:5.0
+    image: mongo:latest
     container_name: mongodb
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: janeway
+      MONGO_INITDB_ROOT_PASSWORD: Jhsd6k9wWo4LlDsuk7nbSYT43jjsoPe4
+      MONGO_INITDB_DATABASE: subspace
+    volumes:
+      - mongodb-data:/data/db
+    restart: always
+
+volumes:
+  mongodb-data:
+    driver: local

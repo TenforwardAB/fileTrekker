@@ -16,39 +16,58 @@
  * This file :: fileModel.ts is part of the fileTrekker project.
  */
 
-import mongoose, { Schema, Model, Document, Types } from 'mongoose';
+import { Db, ObjectId } from 'mongodb';
 
-// Define the interface for the plain file data
 export interface IFile {
+  _id?: ObjectId; // MongoDB ID
   name: string;
   path: string;
   size: number;
-  owner: Types.ObjectId;
-  sharedWith: Types.ObjectId[];
-  group: Types.ObjectId | null;
+  owner: ObjectId;
+  sharedWith?: ObjectId[];
+  group?: ObjectId | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// Define the interface for the document instance (Mongoose document)
-export interface IFileDocument extends IFile, Document {}
+export class FileModel {
+  private collection;
 
-// Define the model interface (static methods)
-export interface IFileModel extends Model<IFileDocument> {}
+  constructor(private db: Db) {
+    this.collection = db.collection('files');
+  }
 
-// Define the schema
-const fileSchema = new Schema<IFileDocument, IFileModel>({
-  name: { type: String, required: true },
-  path: { type: String, required: true },
-  size: { type: Number, required: true },
-  owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  sharedWith: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  group: { type: Schema.Types.ObjectId, ref: 'Group', default: null },
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
-});
+  async createFile(file: {
+    name: string;
+    path: string;
+    size: number;
+    owner: ObjectId;
+    parent: ObjectId | null;
+    sharedWith?: ObjectId[];
+    group?: ObjectId | null;
+  }): Promise<ObjectId> {
+    const result = await this.collection.insertOne({
+      ...file,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return result.insertedId;
+  }
 
-// Create the model explicitly with all required types
-const FileModel = mongoose.model<IFileDocument, IFileModel>('File', fileSchema);
+  async listFiles(ownerId: ObjectId, parentId: ObjectId | null = null): Promise<any[]> {
+    return this.collection.find({ owner: ownerId, parent: parentId }).toArray();
+  }
 
-export default FileModel;
+  async updateFile(fileId: ObjectId, updates: Partial<IFile>): Promise<boolean> {
+    const result = await this.collection.updateOne(
+      { _id: fileId },
+      { $set: { ...updates, updatedAt: new Date() } }
+    );
+    return result.matchedCount > 0;
+  }
+
+  async deleteFile(fileId: ObjectId): Promise<boolean> {
+    const result = await this.collection.deleteOne({ _id: fileId });
+    return result.deletedCount === 1;
+  }
+}
