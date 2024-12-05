@@ -48,5 +48,5 @@ initializeDatabase()
   })
   .catch((err) => {
     console.error('Failed to initialize database:', err.message);
-    process.exit(1); // Exit the process if database initialization fails
+    process.exit(1);
   });

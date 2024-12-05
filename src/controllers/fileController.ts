@@ -36,7 +36,6 @@ export class FileController {
         }
 
         try {
-            // Save the file to GridFS
             const uploadStream = bucket.openUploadStream(file.originalname, {
                 metadata: {
                     owner: new ObjectId(owner),
