@@ -14,3 +14,10 @@ db.folders.createIndex(
     { name: 1, parent: 1 },
     { unique: true }
 );
+
+db.folders.createIndex({ _id: 1 });
+
+db.folders.createIndex(
+    { parent: 1, isGroupFolder: 1 },
+    { partialFilterExpression: { isGroupFolder: true }, unique: true }
+);

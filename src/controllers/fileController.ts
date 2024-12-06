@@ -19,40 +19,73 @@
 import {Request, Response} from 'express';
 import {db} from '../config/database';
 import {FileModel} from '../models/fileModel';
-import {ObjectId} from 'mongodb';
-import {GridFSBucket} from 'mongodb';
+import {GridFSBucket, ObjectId} from 'mongodb';
 
 export class FileController {
     static uploadFile = async (req: Request, res: Response): Promise<void> => {
         const fileModel = new FileModel(db);
         const bucket = new GridFSBucket(db);
+        const folderCollection = db.collection("folders");
+
 
         const {owner, parent} = req.body;
         const file = req.file;
+
 
         if (!file) {
             res.status(400).send({message: 'No file uploaded'});
             return;
         }
 
+
+
         try {
+            if (parent) {
+                const parentFolder = await folderCollection.findOne({_id: new ObjectId(parent)});
+                if (!parentFolder) {
+                    res.status(400).send({message: `Parent folder with ID ${parent} does not exist.`});
+                    return;
+                }
+                if (parentFolder?.groupFolderId || parentFolder?.isGroupFolder) {
+                    // Check group folder permissions
+                    const hasWriteAccess = parentFolder.sharedWith?.some(
+                        (entry) =>
+                            entry.id === owner && entry.permissions.includes("write")
+                    );
+
+                    if (!hasWriteAccess) {
+                        throw new Error("You do not have write access to this folder.");
+                    }
+                }
+            }
+
+
             const uploadStream = bucket.openUploadStream(file.originalname, {
                 metadata: {
                     owner: new ObjectId(owner),
                     parent: parent ? new ObjectId(parent) : null,
                 },
             });
+
             uploadStream.end(file.buffer);
 
             uploadStream.on('finish', async () => {
-                const fileId = await fileModel.createFile({
-                    name: file.originalname,
-                    path: `/files/${uploadStream.id}`, // Reference to GridFS ID
-                    size: file.size,
-                    owner: new ObjectId(owner),
-                    parent: parent ? new ObjectId(parent) : null,
-                });
-                res.status(201).send({fileId});
+                try {
+                    const fileId = await fileModel.createFile({
+                        name: file.originalname,
+                        path: `/files/${uploadStream.id}`, // Reference to GridFS ID
+                        size: file.size,
+                        owner: new ObjectId(owner),
+                        parent: parent ? new ObjectId(parent) : null,
+                    });
+                    res.status(201).send({fileId});
+                } catch (dbErr) {
+                    if (dbErr instanceof Error) {
+                        res.status(500).send({message: 'Error saving file metadata', error: dbErr.message});
+                    } else {
+                        res.status(500).send({message: 'Error saving file metadat', error: String(dbErr)});
+                    }
+                }
             });
 
             uploadStream.on('error', (err) => {
@@ -66,6 +99,7 @@ export class FileController {
             }
         }
     };
+
 
     static async listFiles(req: Request, res: Response) {
         const fileModel = new FileModel(db);

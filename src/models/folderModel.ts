@@ -23,7 +23,9 @@ export interface IFolder {
     name: string;
     parent?: ObjectId | null;
     owner: ObjectId;
-    sharedWith?: ObjectId[];
+    sharedWith?: { id: string; permissions: string[] }[]; // Permission-based shared access
+    groupFolderId?: ObjectId | null; // The group folder this belongs to
+    isGroupFolder?: boolean; // Whether this is a top-level group folder
     group?: ObjectId | null;
     createdAt?: Date;
     updatedAt?: Date;

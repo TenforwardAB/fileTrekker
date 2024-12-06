@@ -1,0 +1,286 @@
+Utökade Routes och Funktioner
+Här är förslag på nya endpoints och deras syften:
+
+1. Tags
+Syfte: Lägg till, hantera och sök filer och mappar baserat på taggar.
+Endpoints:
+POST /api/tags
+
+Lägg till taggar till en fil eller mapp.
+Payload:
+json
+Kopiera kod
+{
+  "itemId": "fileOrFolderId",
+  "tags": ["tag1", "tag2"]
+}
+DELETE /api/tags
+
+Ta bort taggar från en fil eller mapp.
+Payload:
+json
+Kopiera kod
+{
+  "itemId": "fileOrFolderId",
+  "tags": ["tag1"]
+}
+GET /api/tags/:tag
+
+Lista alla filer och mappar som har en viss tag.
+2. Notifications
+Syfte: Informera användare om ändringar i delade mappar eller filer.
+Endpoints:
+POST /api/notifications
+
+Skicka en notifikation till en användare eller grupp.
+Payload:
+json
+Kopiera kod
+{
+  "userId": "recipientId",
+  "message": "A new file was added to your shared folder."
+}
+GET /api/notifications
+
+Hämta alla notifikationer för en användare.
+Optional query params:
+read=false: Hämta endast olästa notifikationer.
+PATCH /api/notifications/:notificationId
+
+Markera en notifikation som läst.
+3. Shares
+Syfte: Hantera fil- och mappdelning.
+Endpoints:
+POST /api/shares
+
+Dela en fil eller mapp med en användare eller grupp.
+Payload:
+json
+Kopiera kod
+{
+  "itemId": "fileOrFolderId",
+  "sharedWith": [
+    { "id": "userId", "permissions": ["read", "write"] }
+  ]
+}
+DELETE /api/shares/:itemId/:userId
+
+Ta bort delning av en fil eller mapp för en specifik användare.
+GET /api/shares/:itemId
+
+Lista alla användare och deras behörigheter för en fil eller mapp.
+4. Services
+Syfte: Utöka med tjänstelager för att hantera komplex affärslogik.
+Exempel på tjänster:
+TagService:
+
+Hantera logiken för att lägga till, ta bort och lista taggar.
+NotificationService:
+
+Hantera notifieringar och integrera med tredjepart (e-post, pushnotiser).
+ShareService:
+
+Hantera delningar, inklusive att kontrollera och tillämpa rättigheter.
+5. Versionshantering
+Syfte: Spåra och återställ tidigare versioner av filer.
+Endpoints:
+POST /api/files/:fileId/versions
+
+Skapa en ny version av en fil.
+GET /api/files/:fileId/versions
+
+Lista alla versioner av en fil.
+GET /api/files/:fileId/versions/:versionId
+
+Hämta en specifik version av en fil.
+DELETE /api/files/:fileId/versions/:versionId
+
+Ta bort en specifik version av en fil.
+6. Access Logs
+Syfte: Spåra aktivitet på filer och mappar.
+Endpoints:
+GET /api/logs/:itemId
+
+Lista alla loggar för en specifik fil eller mapp.
+Exempel på loggdata:
+json
+Kopiera kod
+{
+  "userId": "userId",
+  "action": "download",
+  "timestamp": "2024-12-05T15:00:00Z"
+}
+POST /api/logs
+
+Skapa en loggpost vid händelser (nedladdning, uppladdning, etc.).
+7. Avancerad Sökning
+Syfte: Hitta filer och mappar baserat på metadata (t.ex. namn, taggar, storlek, ägare, skapelsedatum).
+Endpoint:
+GET /api/search
+Query parameters:
+q=<search term>
+owner=<userId>
+tags=["tag1", "tag2"]
+createdAfter=YYYY-MM-DD
+createdBefore=YYYY-MM-DD
+Tjänstestruktur (Services)
+För en mer skalbar lösning, implementera logiken i tjänstelager:
+
+TagService: Hanterar logiken för taggar.
+NotificationService: Hanterar notifieringar och e-post.
+ShareService: Hanterar delningar och behörigheter.
+VersioningService: Hanterar versionshantering av filer.
+SearchService: Utför sökningar baserade på metadata.
+AccessLogService: Loggar och hämtar aktivitet.
+Fördelar med Utökad Funktionalitet
+Användarvänlighet: Stöd för taggar, notifieringar och delningar gör tjänsten lättare att använda.
+Skalbarhet: Genom att lägga till tjänstelager kan ny funktionalitet enkelt utökas.
+Säkerhet: Bättre kontroll över behörigheter med shares och access logs.
+Konkurrenskraft: Med versionshantering och avancerad sökning matchar tjänsten kommersiella alternativ.
+Om du vill kan jag hjälpa till att implementera någon av dessa funktioner eller skapa en mer detaljerad plan för specifika tjänster! 😊
+
+
+
+
+
+
+Du sade:
+du hade fler föslag tidigare, du behöver inte ha fullständiga routes, utan bara beskrivningar samt add du även föreslog en services folder tx fileService, som hanterar eventuella kopplingar och logik mellan modellen och kontrollern
+permissions om jag inte missminner mig heller hade du som förslag
+ChatGPT sade:
+ChatGPT
+Absolut, här är en utökad lista på funktioner och idéer som kan ingå i en komplett filhanteringstjänst, inklusive beskrivningar av deras syften och relationer till tjänster och modeller. Jag har också inkluderat förslag på en services-mapp och hur olika tjänster kan hantera logik mellan modeller och controllers.
+
+Utökade Funktioner och Deras Syften
+1. Permission System (Behörighetssystem)
+Syfte:
+Ge granular kontroll över åtkomst till filer och mappar.
+Stöd för olika nivåer: read, write, delete, full.
+Beskrivning:
+Varje fil/mapp kan ha en permissions-array som definierar åtkomsträttigheter.
+Exempel:
+json
+Kopiera kod
+{
+  "permissions": [
+    { "userId": "user1", "access": ["read", "write"] },
+    { "userId": "user2", "access": ["read"] }
+  ]
+}
+Tjänst: PermissionService
+Hanterar validering och tillämpning av rättigheter (t.ex. kan användaren ladda upp, radera?).
+2. File Previews
+Syfte:
+Visa förhandsgranskningar av filer (bilder, PDF:er, textfiler) direkt i tjänsten.
+Beskrivning:
+Vid uppladdning av en fil genereras en miniatyrbild (t.ex. med sharp för bilder).
+Spara metadata för förhandsgranskningen i filens GridFS-metadata.
+Tjänst: FilePreviewService
+Genererar och hanterar förhandsgranskningar.
+3. Expiring Links (Tillfälliga Delningslänkar)
+Syfte:
+Dela filer/mappar med en länk som löper ut efter en viss tid.
+Beskrivning:
+Endpoint skapar en tillfällig länk kopplad till filen/mappen.
+Länken innehåller en token och en expiryDate.
+Tjänst: LinkService
+Genererar token, sparar i databasen och validerar vid åtkomst.
+4. Trash/Recycle Bin
+Syfte:
+Möjlighet att återskapa raderade filer/mappar inom en viss tidsram.
+Beskrivning:
+När en fil/mapp raderas, flyttas den till en "papperskorg" istället för att tas bort permanent.
+Endpoints:
+GET /api/trash: Lista objekt i papperskorgen.
+POST /api/trash/restore/:id: Återskapa objekt.
+Tjänst: TrashService
+Hanterar flytt, återställning och permanent borttagning.
+5. Notifications
+Syfte:
+Informera användare om ändringar (nya filer, raderingar, delningar).
+Beskrivning:
+Skicka notifieringar till berörda användare vid delning eller ändringar.
+Endpoints:
+GET /api/notifications: Hämta användarens notifieringar.
+PATCH /api/notifications/:id: Markera som läst.
+Tjänst: NotificationService
+Hanterar notifieringar, integrerar eventuellt med tredjepart (e-post, pushnotiser).
+6. Favorites/Bookmarks
+Syfte:
+Ge användare möjlighet att flagga filer/mappar som favoriter.
+Beskrivning:
+Lägga till en isFavorite-flagga på filer/mappar.
+Endpoints:
+POST /api/favorites: Lägg till som favorit.
+DELETE /api/favorites/:id: Ta bort som favorit.
+Tjänst: FavoriteService
+Hanterar logik för att markera favoriter.
+7. Activity Logs
+Syfte:
+Spåra aktivitet på filer och mappar (visningar, nedladdningar, ändringar).
+Beskrivning:
+Varje interaktion med filer/mappar loggas i en activity_logs-collection.
+Exempel:
+json
+Kopiera kod
+{
+  "fileId": "file1",
+  "userId": "user2",
+  "action": "download",
+  "timestamp": "2024-12-05T15:00:00Z"
+}
+Tjänst: ActivityLogService
+Loggar och hämtar aktiviteter.
+Förslag på services-mapp
+En services-mapp kan innehålla logik som kopplar ihop controllers och modeller, och abstraherar bort komplexitet.
+
+Exempelstruktur
+markdown
+Kopiera kod
+services/
+  - permissionService.ts
+  - filePreviewService.ts
+  - linkService.ts
+  - trashService.ts
+  - notificationService.ts
+  - favoriteService.ts
+  - activityLogService.ts
+Exempel på en tjänst
+permissionService.ts
+
+typescript
+Kopiera kod
+import { ObjectId, Db } from "mongodb";
+
+export class PermissionService {
+    constructor(private db: Db) {}
+
+    async checkAccess(userId: ObjectId, folderId: ObjectId, requiredPermission: string): Promise<boolean> {
+        const folder = await this.db.collection("folders").findOne({ _id: folderId });
+        if (!folder) throw new Error("Folder not found");
+
+        const permission = folder.sharedWith?.find(entry => entry.id.toString() === userId.toString());
+        return permission?.permissions.includes(requiredPermission) || false;
+    }
+}
+Använd i controller:
+
+typescript
+Kopiera kod
+const permissionService = new PermissionService(db);
+const hasAccess = await permissionService.checkAccess(owner, parent, "write");
+if (!hasAccess) {
+    res.status(403).send({ message: "You do not have write access to this folder." });
+    return;
+}
+Sammanfattning av Nya Funktioner
+Funktion	Syfte	Tjänst
+Tags	Organisera filer/mappar med taggar.	TagService
+Notifications	Informera användare om ändringar.	NotificationService
+Shares	Kontrollera delning och behörigheter.	ShareService
+Versionshantering	Spåra och återställ tidigare versioner.	VersioningService
+Activity Logs	Spåra användaraktivitet.	ActivityLogService
+Favorites	Markera filer/mappar som favoriter.	FavoriteService
+Expiring Links	Skapa tillfälliga delningslänkar.	LinkService
+Trash	Hantera raderade objekt.	TrashService
+Permissions	Kontrollera behörigheter för filer/mappar.	PermissionService
