@@ -18,19 +18,13 @@
 
 import express from 'express';
 import { FolderController } from '../controllers/folderController';
+import {authMiddleware} from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// Create folder
-router.post('/', FolderController.createFolder);
-
-// List folders for a user
+router.post('/', authMiddleware, FolderController.createFolder);
 router.get('/:ownerId', FolderController.listFolders);
-
-// Update folder
 router.put('/:folderId', FolderController.updateFolder);
-
-// Delete folder
 router.delete('/:folderId', FolderController.deleteFolder);
 
 export default router;

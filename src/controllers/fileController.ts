@@ -47,9 +47,8 @@ export class FileController {
                     return;
                 }
                 if (parentFolder?.groupFolderId || parentFolder?.isGroupFolder) {
-                    // Check group folder permissions
                     const hasWriteAccess = parentFolder.sharedWith?.some(
-                        (entry) =>
+                        (entry: { id: any; permissions: string | string[]; }) =>
                             entry.id === owner && entry.permissions.includes("write")
                     );
 
@@ -73,7 +72,7 @@ export class FileController {
                 try {
                     const fileId = await fileModel.createFile({
                         name: file.originalname,
-                        path: `/files/${uploadStream.id}`, // Reference to GridFS ID
+                        path: `/files/${uploadStream.id}`, // TODO: Set Gridfs standard structure
                         size: file.size,
                         owner: new ObjectId(owner),
                         parent: parent ? new ObjectId(parent) : null,

@@ -26,11 +26,8 @@ const upload = multer({
   limits: { fileSize: 150 * 1024 * 1024 },
 });
 router.post('/', upload.single('file'), FileController.uploadFile);
-
 router.get('/:ownerId', FileController.listFiles);
-
 router.put('/:fileId', FileController.updateFile);
-
 router.delete('/:fileId', FileController.deleteFile);
 
 export default router;
