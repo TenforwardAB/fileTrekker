@@ -28,7 +28,8 @@ export class FileController {
         const folderCollection = db.collection("folders");
 
 
-        const {owner, parent} = req.body;
+        const {owner, parent, permissions} = req.body;
+        console.log(permissions);
         const file = req.file;
 
 

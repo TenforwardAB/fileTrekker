@@ -32,28 +32,43 @@ export interface AuthenticatedRequest extends Request {
     user?: JwtPayload;
 }
 
-// Ensure the middleware function is explicitly typed as RequestHandler
-export const jwtMiddleware: RequestHandler = async (
+
+const jwtAuth: RequestHandler = async (
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
-): Promise<Response | void> => {
-
+): Promise<void> => {
     const authHeader = req.header('Authorization');
+    console.log(req.body);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         console.error('Authorization error: No token provided');
-        return res.status(401).json({ message: 'No token, authorization denied' });
-        //return;
+        res.status(401).json({ message: 'No token, authorization denied' });
+        return;
     }
 
     const token = authHeader.split(' ')[1];
 
     try {
         req.user = await verifyToken(token);
+        if (req.body && req.body.permissions) {
+            try {
+                const decodedPermissions = await verifyToken(req.body.permissions);
+
+                req.body.permissions = decodedPermissions;
+            } catch (err) {
+                console.error('Permissions JWT error: Invalid token', err);
+                res.status(400).json({ message: 'Invalid permissions token' });
+                return;
+            }
+        }
         next();
     } catch (err) {
         console.error('Authorization error: Invalid token', err);
-        return res.status(401).json({ message: 'Token is not valid' });
+        res.status(401).json({ message: 'Token is not valid' });
+        return;
     }
 };
+
+export const authMiddleware = jwtAuth;
+

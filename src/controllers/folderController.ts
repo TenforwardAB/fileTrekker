@@ -25,7 +25,8 @@ export class FolderController {
     static async createFolder(req: Request, res: Response) {
         const folderModel = new FolderModel(db);
 
-        const {name, parent, owner} = req.body;
+        const {name, parent, owner,permissions} = req.body;
+        console.log(permissions);
 
         try {
             const folderId = await folderModel.createFolder({

@@ -17,7 +17,13 @@
  */
 
 import { loadPlugin } from '../plugins/pluginLoader';
+import { RequestHandler } from 'express';
 
-const authPlugin = loadPlugin<{ authMiddleware: Function }>('auth');
+const authPlugin = loadPlugin<{ authMiddleware: RequestHandler }>('auth');
+console.log('authPlugin:', authPlugin);
+
+if (!authPlugin.authMiddleware) {
+    throw new Error('authMiddleware is undefined. Check plugin loading.');
+}
 
 export const authMiddleware = authPlugin.authMiddleware;

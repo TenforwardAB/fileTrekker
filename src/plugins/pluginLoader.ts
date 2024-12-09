@@ -26,9 +26,12 @@ export const loadPlugin = <T extends Plugin>(pluginType: string): T => {
     const { config } = require('../config');
     console.log(config);
     const pluginName = config[`${pluginType}Plugin`];
+    console.log('Plugin Name:', pluginName);
 
     try {
         const pluginPath = path.join(__dirname, pluginType, pluginName);
+        console.log('Plugin Path:', pluginPath);
+
         const plugin = require(pluginPath);
         return plugin as T;
     } catch (error) {
