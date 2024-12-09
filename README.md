@@ -1,6 +1,6 @@
 # File Storage and Sharing Platform
 ![Project Logo](docs/images/filetrekker_200x202.png)
-
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://app.gitter.im/#/room/#filetrekker:gitter.im)
 ## Overview
 
 This project aims to create a modern file storage and sharing solution, inspired by Google Drive, 
