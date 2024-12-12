@@ -20,33 +20,42 @@ import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { initializeDatabase } from './config/database'; // Import database initialization
+import { initializeDatabase } from './config/database';
 import fileRoutes from './routes/fileRoutes';
 import folderRoutes from './routes/folderRoutes';
 
+import {logger} from "./services/loggerService";
+
 dotenv.config();
 
+function registerRoute(path: string, router: express.Router) {
+    logger.info(`Registering routes: ${path}`);
+    app.use(path, (req, res, next) => {
+        next();
+    }, router);
+}
+
 const app = express();
+logger.info("Starting fileTrekker")
 app.use(bodyParser.json());
 app.use(cors());
 
 const PORT = process.env.PORT || 4000;
+logger.info("Setting Port: " + PORT);
 
 
 initializeDatabase()
   .then(() => {
-    console.log('Database initialized successfully');
+    logger.info('Database initialized successfully');
 
-    // Routes
-    app.use('/api/files', fileRoutes);
-    app.use('/api/folders', folderRoutes);
+    registerRoute('/api/files', fileRoutes);
+    registerRoute('/api/folders', folderRoutes);
 
-    // Start the server
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.debug(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('Failed to initialize database:', err.message);
+    logger.error('Failed to initialize database: ' + err.message);
     process.exit(1);
   });

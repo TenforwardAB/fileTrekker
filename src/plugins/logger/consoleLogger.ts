@@ -11,12 +11,15 @@
  *
  * Copyright (c) 2024- Tenforward AB. All rights reserved.
  *
- * Created on 12/8/24 :: 9:44PM BY joyider <andre(-at-)sess.se>
+ * Created on 12/11/24 :: 8:13AM BY joyider <andre(-at-)sess.se>
  *
- * This file :: index.ts is part of the fileTrekker project.
+ * This file :: consoleLogger.ts is part of the fileTrekker project.
  */
+import {LogLevel} from "../../types";
 
-export const config = {
-    authPlugin: 'jwtAuth',
-    loggerPlugin: 'defaultLogger',
+export const consoleLogger = {
+    write(level: LogLevel, message: string, meta?: Record<string, any>): void {
+        const timestamp = new Date().toISOString();
+        console.log(`${timestamp} [${level.toUpperCase()}]: ${message}`, meta || '');
+    }
 };

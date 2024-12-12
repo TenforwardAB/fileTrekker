@@ -18,6 +18,8 @@
 
 import { loadPlugin } from '../plugins/pluginLoader';
 import { RequestHandler } from 'express';
+import { logger } from '../services/loggerService';
+
 
 const authPlugin = loadPlugin<{ authMiddleware: RequestHandler }>('auth');
 console.log('authPlugin:', authPlugin);
@@ -26,4 +28,18 @@ if (!authPlugin.authMiddleware) {
     throw new Error('authMiddleware is undefined. Check plugin loading.');
 }
 
-export const authMiddleware = authPlugin.authMiddleware;
+export const requestLogger: RequestHandler = (req, res, next) => {
+    logger.debug('Incoming request', {
+        method: req.method,
+        url: req.originalUrl || req.url,
+        headers: req.headers,
+        body: req.body,
+    });
+    next();
+};
+
+export const authMiddleware: RequestHandler = (req, res, next) => {
+    requestLogger(req, res, () => {
+        authPlugin.authMiddleware(req, res, next);
+    });
+};

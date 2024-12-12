@@ -19,12 +19,28 @@
 import express from 'express';
 import { FolderController } from '../controllers/folderController';
 import {authMiddleware} from "../middleware/authMiddleware";
+import {logger} from "../services/loggerService";
 
 const router = express.Router();
 
-router.post('/', authMiddleware, FolderController.createFolder);
-router.get('/:ownerId', FolderController.listFolders);
-router.put('/:folderId', FolderController.updateFolder);
-router.delete('/:folderId', FolderController.deleteFolder);
+router.post('/', authMiddleware, (req, res, next) => {
+    logger.info('Creating a new folder');
+    next();
+}, FolderController.createFolder);
+
+router.get('/:ownerId', authMiddleware, (req, res, next) => {
+    logger.info(`Listing folders for ownerId: ${req.params.ownerId}`);
+    next();
+}, FolderController.listFolders);
+
+router.put('/:folderId', authMiddleware, (req, res, next) => {
+    logger.info(`Updating folder with folderId: ${req.params.folderId}`);
+    next();
+}, FolderController.updateFolder);
+
+router.delete('/:folderId', authMiddleware, (req, res, next) => {
+    logger.info(`Deleting folder with folderId: ${req.params.folderId}`);
+    next();
+}, FolderController.deleteFolder);
 
 export default router;

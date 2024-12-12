@@ -11,12 +11,12 @@
  *
  * Copyright (c) 2024- Tenforward AB. All rights reserved.
  *
- * Created on 12/8/24 :: 9:44PM BY joyider <andre(-at-)sess.se>
+ * Created on 12/11/24 :: 8:43AM BY joyider <andre(-at-)sess.se>
  *
- * This file :: index.ts is part of the fileTrekker project.
+ * This file :: types.ts is part of the fileTrekker project.
  */
 
-export const config = {
-    authPlugin: 'jwtAuth',
-    loggerPlugin: 'defaultLogger',
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'critical';
+export type LoggerPlugin = {
+    write: (level: LogLevel, message: string, meta?: Record<string, any>) => void;
 };

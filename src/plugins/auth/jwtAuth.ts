@@ -39,7 +39,6 @@ const jwtAuth: RequestHandler = async (
     next: NextFunction
 ): Promise<void> => {
     const authHeader = req.header('Authorization');
-    console.log(req.body);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         console.error('Authorization error: No token provided');

@@ -19,15 +19,31 @@
 import express from 'express';
 import multer from 'multer';
 import { FileController } from '../controllers/fileController';
+import {logger} from "../services/loggerService";
 
 const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 150 * 1024 * 1024 },
 });
-router.post('/', upload.single('file'), FileController.uploadFile);
-router.get('/:ownerId', FileController.listFiles);
-router.put('/:fileId', FileController.updateFile);
-router.delete('/:fileId', FileController.deleteFile);
+router.post('/', upload.single('file'), (req, res, next) => {
+  logger.info('Handling file upload');
+  next();
+}, FileController.uploadFile);
+
+router.get('/:ownerId', (req, res, next) => {
+  logger.info(`Listing files for ownerId: ${req.params.ownerId}`);
+  next();
+}, FileController.listFiles);
+
+router.put('/:fileId', (req, res, next) => {
+  logger.info(`Updating file with fileId: ${req.params.fileId}`);
+  next();
+}, FileController.updateFile);
+
+router.delete('/:fileId', (req, res, next) => {
+  logger.info(`Deleting file with fileId: ${req.params.fileId}`);
+  next();
+}, FileController.deleteFile);
 
 export default router;
